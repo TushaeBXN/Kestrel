@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kestrel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#050a14;--panel:#0a1322;--panel2:#0e1a2e;--line:#1a2a44;--text:#dce6f5;--dim:#7d90ae;
+--blue:#4599ff;--teal:#29c484;--red:#ff5d6c;--amber:#f5b83d;
+--sans:"IBM Plex Sans",system-ui,sans-serif;--mono:"IBM Plex Mono",ui-monospace,monospace;--head:"Barlow Condensed",sans-serif}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font:14px/1.5 var(--sans)}
+button,input,textarea,select{font:inherit;color:inherit}
+button{background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:6px 12px;cursor:pointer}
+button:hover{border-color:var(--blue)}
+button.primary{background:var(--blue);border-color:var(--blue);color:#02101f;font-weight:500}
+button.ok{background:var(--teal);border-color:var(--teal);color:#02150d;font-weight:500}
+button.danger{border-color:var(--red);color:var(--red)}
+button:disabled{opacity:.45;cursor:not-allowed}
+input,textarea,select{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:6px 9px;width:100%}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--blue)}
+h1,h2{font-family:var(--head);letter-spacing:.04em;text-transform:uppercase;margin:0}
+h2{font-size:13px;color:var(--dim);margin-bottom:8px}
+#app{display:grid;grid-template-columns:270px 1fr 320px;height:100%}
+aside,section{min-height:0;overflow:auto}
+aside{background:var(--panel);padding:14px;display:flex;flex-direction:column;gap:14px}
+#left{border-right:1px solid var(--line)} #right{border-left:1px solid var(--line)}
+.brand{display:flex;align-items:baseline;gap:8px} .brand h1{font-size:26px;color:var(--blue)} .brand span{color:var(--dim);font-size:12px}
+.row{display:flex;gap:6px} .row>*{flex:1} .row>button{flex:0 0 auto}
+.card{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:10px}
+details summary{cursor:pointer;color:var(--dim);font-family:var(--head);letter-spacing:.04em;text-transform:uppercase;font-size:13px}
+details[open] summary{margin-bottom:8px} details .stack{display:flex;flex-direction:column;gap:6px}
+#tree{font:12px/1.7 var(--mono);overflow:auto;flex:1;min-height:80px}
+#tree div{cursor:pointer;white-space:nowrap;color:var(--dim)} #tree div.file:hover{color:var(--text)} #tree div.dir{color:var(--text)}
+main{display:flex;flex-direction:column;min-height:0;min-width:0}
+#top{padding:10px 16px;border-bottom:1px solid var(--line);display:flex;gap:12px;align-items:center}
+#top .ws{font-family:var(--head);font-size:20px;letter-spacing:.04em} #top .br{color:var(--teal);font:12px var(--mono)}
+#top .sp{flex:1} #top label{display:flex;gap:6px;align-items:center;color:var(--dim);font-size:12px;white-space:nowrap}
+#top label input{width:auto}
+#feed{flex:1;overflow:auto;padding:16px;display:flex;flex-direction:column;gap:12px}
+.msg{max-width:860px;white-space:pre-wrap;word-break:break-word}
+.msg.user{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:8px 12px;align-self:flex-end}
+.msg.err{color:var(--red)} .msg.sys{color:var(--dim);font-size:12px}
+.tool{border:1px solid var(--line);border-left:3px solid var(--blue);border-radius:6px;background:var(--panel);font:12px/1.5 var(--mono);max-width:860px}
+.tool summary{padding:6px 10px;cursor:pointer;color:var(--blue)} .tool pre{margin:0;padding:8px 10px;border-top:1px solid var(--line);white-space:pre-wrap;word-break:break-word;color:var(--dim);max-height:260px;overflow:auto}
+.tool.done{border-left-color:var(--teal)} .tool.done summary{color:var(--teal)} .tool.fail{border-left-color:var(--red)} .tool.fail summary{color:var(--red)}
+.approve{border:1px solid var(--amber);border-radius:8px;background:var(--panel);padding:10px 12px;max-width:860px}
+.approve code{display:block;font:12px var(--mono);background:var(--bg);padding:6px 8px;border-radius:5px;margin:6px 0;white-space:pre-wrap;word-break:break-word}
+#composer{padding:12px 16px;border-top:1px solid var(--line);display:flex;gap:8px;align-items:flex-end}
+#composer textarea{resize:none;height:62px}
+#status{font-family:var(--mono);font-size:12px}
+#status .chg{display:flex;gap:8px} .s-M{color:var(--amber)} .s-A,.s-\?{color:var(--teal)} .s-D{color:var(--red)}
+#diff{font:11px/1.45 var(--mono);white-space:pre;overflow:auto;max-height:240px;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px}
+#diff .a{color:var(--teal)} #diff .d{color:var(--red)} #diff .h{color:var(--blue)}
+#log{font:11px var(--mono);color:var(--dim)}
+.muted{color:var(--dim);font-size:12px}
+#viewer{position:fixed;inset:5% 8%;background:var(--panel);border:1px solid var(--line);border-radius:10px;display:none;flex-direction:column;z-index:9}
+#viewer header{padding:8px 12px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;font-family:var(--mono);font-size:12px}
+#viewer pre{margin:0;padding:12px;overflow:auto;flex:1;font:12px/1.5 var(--mono)}
+#toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:8px 14px;display:none;z-index:10;max-width:80vw}
+@media (max-width:1000px){#app{grid-template-columns:1fr;grid-auto-rows:auto;overflow:auto;height:auto}main{min-height:70vh}#left,#right{border:0}}
+</style>
+</head>
+<body>
+<div id="app">
+  <aside id="left">
+    <div class="brand"><h1>Kestrel</h1><span>coding agent</span></div>
+    <div>
+      <h2>Workspace</h2>
+      <select id="wsSel"></select>
+    </div>
+    <details>
+      <summary>Clone from GitHub</summary>
+      <div class="stack">
+        <input id="cloneUrl" placeholder="https://github.com/user/repo">
+        <button id="cloneBtn" class="primary">Clone</button>
+      </div>
+    </details>
+    <details>
+      <summary>New / Upload</summary>
+      <div class="stack">
+        <div class="row"><input id="newName" placeholder="new project name"><button id="newBtn">Create</button></div>
+        <label class="muted">Upload zip into workspace<input id="zipIn" type="file" accept=".zip"></label>
+        <label class="muted">Upload folder<input id="dirIn" type="file" webkitdirectory multiple></label>
+        <label class="muted">Upload files<input id="fileIn" type="file" multiple></label>
+      </div>
+    </details>
+    <details>
+      <summary>Settings</summary>
+      <div class="stack">
+        
+        <input id="ghToken" type="password" placeholder="GitHub token (repo scope)">
+        <div class="row"><input id="gitName" placeholder="git name"><input id="gitEmail" placeholder="git email"></div>
+        <button id="saveSet">Save</button>
+        <div class="muted" id="cfgInfo"></div>
+      </div>
+    </details>
+    <div style="display:flex;flex-direction:column;flex:1;min-height:0">
+      <h2>Files</h2><div id="tree"></div>
+    </div>
+  </aside>
+
+  <main>
+    <div id="top">
+      <span class="ws" id="wsName">—</span><span class="br" id="brName"></span><span class="sp"></span>
+      <label>model <select id="profile" style="width:auto"></select></label>
+      <label title="Run shell and git actions without asking"><input type="checkbox" id="auto"> auto-approve</label>
+      <button id="resetBtn" title="Clear chat memory for this workspace">New chat</button>
+    </div>
+    <div id="feed"></div>
+    <div id="composer">
+      <textarea id="goal" placeholder="Tell Kestrel what to do…  (Enter to send, Shift+Enter for newline)"></textarea>
+      <button id="send" class="primary">Run</button>
+      <button id="stop" class="danger" style="display:none">Stop</button>
+    </div>
+  </main>
+
+  <aside id="right">
+    <div><h2>Git</h2><div id="status" class="card"><span class="muted">no workspace</span></div></div>
+    <div class="card" style="display:flex;flex-direction:column;gap:6px">
+      <input id="commitMsg" placeholder="Commit message">
+      <button id="reviewBtn" title="Ask the paid expert model to review the diff">Review diff with expert</button>
+      <div class="row"><button id="commitBtn" class="ok">Commit all</button><button id="pushBtn" class="primary">Push</button><button id="pullBtn">Pull</button></div>
+      <div class="row"><input id="branchIn" placeholder="branch"><button id="branchBtn">Switch / create</button></div>
+      <div class="row"><input id="remoteIn" placeholder="remote URL (origin)"><button id="remoteBtn">Set</button></div>
+    </div>
+    <div><h2>Diff</h2><div id="diff" class="muted">—</div></div>
+    <div><h2>Log</h2><div id="log"></div></div>
+  </aside>
+</div>
+
+<div id="viewer"><header><span id="vPath"></span><button id="vClose">Close</button></header><pre id="vBody"></pre></div>
+<div id="toast"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+let ws = localStorage.getItem('kestrel.ws') || '';
+let busy = false, sessionId = null, toolEls = {};
+
+async function api(path, opts = {}) {
+  const r = await fetch(path, opts);
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(data.error || r.statusText);
+  return data;
+}
+const post = (p, body) => api(p, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body || {})});
+function toast(msg, ms = 3500) { const t = $('toast'); t.textContent = msg; t.style.display = 'block'; clearTimeout(t._h); t._h = setTimeout(() => t.style.display = 'none', ms); }
+async function guard(fn, btn) { if (btn) btn.disabled = true; try { return await fn(); } catch (e) { toast(e.message, 6000); } finally { if (btn) btn.disabled = false; } }
+
+/* ---------- feed ---------- */
+function add(cls, text) { const d = document.createElement('div'); d.className = 'msg ' + cls; d.textContent = text; $('feed').appendChild(d); scroll(); return d; }
+function scroll() { const f = $('feed'); f.scrollTop = f.scrollHeight; }
+let curText = null;
+function onEvent(ev) {
+  if (ev.type === 'text') { if (!curText) curText = add('', ''); curText.textContent += ev.text; scroll(); return; }
+  curText = null;
+  if (ev.type === 'tool_call') {
+    const d = document.createElement('details'); d.className = 'tool';
+    const s = document.createElement('summary'); s.textContent = `${ev.name}  ${JSON.stringify(ev.input).slice(0, 90)}`;
+    const p = document.createElement('pre'); p.textContent = JSON.stringify(ev.input, null, 2);
+    d.append(s, p); $('feed').appendChild(d); toolEls[ev.id] = d; scroll();
+  } else if (ev.type === 'tool_result') {
+    const d = toolEls[ev.id]; if (!d) return;
+    const bad = ev.result && ev.result.error; d.classList.add(bad ? 'fail' : 'done');
+    const p = document.createElement('pre'); p.textContent = JSON.stringify(ev.result, null, 2).slice(0, 6000); d.appendChild(p);
+    if (['write_file', 'edit_file', 'run_shell', 'git_commit', 'git_push'].includes(ev.name)) { refreshTree(); refreshGit(); }
+  } else if (ev.type === 'approval') {
+    const box = document.createElement('div'); box.className = 'approve';
+    box.innerHTML = '<b></b><code></code><div class="row" style="justify-content:flex-start"><button class="ok">Allow</button><button class="danger">Deny</button></div>';
+    box.querySelector('b').textContent = `Kestrel wants to ${ev.name}`;
+    box.querySelector('code').textContent = ev.detail;
+    const [yes, no] = box.querySelectorAll('button');
+    const answer = allow => async () => { yes.disabled = no.disabled = true; box.style.borderColor = allow ? 'var(--teal)' : 'var(--red)';
+      await guard(() => post('/api/approve', {sessionId, id: ev.id, allow})); };
+    yes.onclick = answer(true); no.onclick = answer(false);
+    $('feed').appendChild(box); scroll();
+  } else if (ev.type === 'error') add('err', 'Error: ' + ev.message);
+  else if (ev.type === 'usage') add('sys', `tokens in ${ev.input} / out ${ev.output}`);
+  else if (ev.type === 'done') { refreshTree(); refreshGit(); }
+}
+function setBusy(b) { busy = b; $('send').disabled = b; $('stop').style.display = b ? '' : 'none'; $('send').style.display = b ? 'none' : ''; }
+
+async function send() {
+  const goal = $('goal').value.trim(); if (!goal || busy || !ws) return;
+  $('goal').value = ''; add('user', goal); setBusy(true); curText = null;
+  try {
+    const r = await post('/api/run', {workspace: ws, goal, profile: $('profile').value, auto: $('auto').checked});
+    sessionId = r.sessionId;
+    const es = new EventSource('/api/stream/' + sessionId);
+    es.onmessage = m => { const ev = JSON.parse(m.data); if (ev.type === 'stream-end') { es.close(); setBusy(false); } else onEvent(ev); };
+    es.onerror = () => { es.close(); setBusy(false); };
+  } catch (e) { add('err', e.message); setBusy(false); }
+}
+
+/* ---------- workspaces ---------- */
+async function loadWorkspaces(select) {
+  const {workspaces} = await api('/api/workspaces');
+  const sel = $('wsSel'); sel.innerHTML = '';
+  workspaces.forEach(w => sel.add(new Option(w, w)));
+  if (select) ws = select; else if (!workspaces.includes(ws)) ws = workspaces[0] || '';
+  sel.value = ws; await switchWs();
+}
+async function switchWs() {
+  ws = $('wsSel').value; localStorage.setItem('kestrel.ws', ws);
+  $('wsName').textContent = ws || '—'; $('feed').innerHTML = ''; toolEls = {};
+  if (!ws) { add('sys', 'Clone a GitHub repo or create a new project to begin.'); return; }
+  add('sys', `Workspace "${ws}" ready.`); refreshTree(); refreshGit();
+}
+async function refreshTree() {
+  if (!ws) return; const t = $('tree'); t.innerHTML = '';
+  try { const {tree} = await api(`/api/workspaces/${ws}/tree`);
+    tree.forEach(e => { const d = document.createElement('div'); d.className = e.type;
+      const depth = e.path.split('/').length - 1; d.style.paddingLeft = depth * 12 + 'px';
+      d.textContent = (e.type === 'dir' ? '▸ ' : '') + e.path.split('/').pop();
+      if (e.type === 'file') d.onclick = () => openFile(e.path); t.appendChild(d); });
+  } catch (e) {}
+}
+async function openFile(path) {
+  await guard(async () => { const f = await api(`/api/workspaces/${ws}/file?path=${encodeURIComponent(path)}`);
+    $('vPath').textContent = path; $('vBody').textContent = f.content; $('viewer').style.display = 'flex'; });
+}
+
+/* ---------- git panel ---------- */
+async function refreshGit() {
+  if (!ws) return; const st = $('status');
+  try {
+    const g = await api(`/api/workspaces/${ws}/git`);
+    if (!g.repo) { st.innerHTML = '<div class="muted">Not a git repo.</div>'; const b = document.createElement('button'); b.textContent = 'git init';
+      b.onclick = () => guard(async () => { await post(`/api/workspaces/${ws}/git/init`); refreshGit(); }); st.appendChild(b); $('diff').textContent = '—'; $('log').textContent = ''; return; }
+    $('brName').textContent = '⎇ ' + g.branch.split('...')[0];
+    st.innerHTML = ''; const h = document.createElement('div'); h.textContent = g.branch + (g.remote ? '' : '  (no remote)'); st.appendChild(h);
+    if (!g.changes.length) { const c = document.createElement('div'); c.className = 'muted'; c.textContent = 'clean'; st.appendChild(c); }
+    g.changes.forEach(c => { const r = document.createElement('div'); r.className = 'chg'; r.innerHTML = `<span class="s-${c.status[0]}"></span><span></span>`;
+      r.children[0].textContent = c.status; r.children[1].textContent = c.path; st.appendChild(r); });
+    $('log').textContent = (g.log || []).join('\n'); $('log').style.whiteSpace = 'pre';
+    $('remoteIn').placeholder = g.remote || 'remote URL (origin)';
+    const {diff} = await api(`/api/workspaces/${ws}/diff`);
+    const dv = $('diff'); dv.innerHTML = '';
+    (diff || '').split('\n').forEach(l => { const s = document.createElement('div'); s.textContent = l;
+      if (l.startsWith('+') && !l.startsWith('+++')) s.className = 'a'; else if (l.startsWith('-') && !l.startsWith('---')) s.className = 'd'; else if (l.startsWith('@@')) s.className = 'h'; dv.appendChild(s); });
+    if (!diff) dv.textContent = '—';
+  } catch (e) { st.textContent = e.message; }
+}
+
+/* ---------- uploads ---------- */
+async function uploadFiles(files) {
+  if (!ws) return toast('Pick a workspace first');
+  let n = 0;
+  for (const f of files) {
+    let rel = f.webkitRelativePath || f.name;
+    if (f.webkitRelativePath) rel = rel.split('/').slice(1).join('/');   // drop the picked folder's own name
+    if (rel.split('/').includes('.git') || rel.split('/').includes('node_modules')) continue;
+    await api(`/api/workspaces/${ws}/upload?path=${encodeURIComponent(rel)}`, {method: 'POST', body: f}); n++;
+  }
+  toast(`Uploaded ${n} file(s)`); refreshTree(); refreshGit();
+}
+
+/* ---------- wiring ---------- */
+$('wsSel').onchange = switchWs;
+$('send').onclick = send; $('stop').onclick = () => post('/api/stop/' + ws);
+$('goal').onkeydown = e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } };
+$('resetBtn').onclick = () => guard(async () => { await post('/api/reset/' + ws); $('feed').innerHTML = ''; add('sys', 'New chat started.'); });
+$('vClose').onclick = () => $('viewer').style.display = 'none';
+$('cloneBtn').onclick = e => guard(async () => { const r = await post('/api/workspaces/clone', {url: $('cloneUrl').value}); $('cloneUrl').value = ''; toast('Cloned ' + r.name); await loadWorkspaces(r.name); }, e.target);
+$('newBtn').onclick = e => guard(async () => { const r = await post('/api/workspaces', {name: $('newName').value}); $('newName').value = ''; await loadWorkspaces(r.name); }, e.target);
+$('zipIn').onchange = e => guard(async () => { const f = e.target.files[0]; if (!f) return;
+  const r = await api(`/api/workspaces/${ws}/upload-zip`, {method: 'POST', body: f}); toast(`Extracted ${r.files} files`); e.target.value = ''; refreshTree(); refreshGit(); });
+$('dirIn').onchange = e => guard(async () => { await uploadFiles(e.target.files); e.target.value = ''; });
+$('fileIn').onchange = e => guard(async () => { await uploadFiles(e.target.files); e.target.value = ''; });
+$('saveSet').onclick = e => guard(async () => { const c = await post('/api/settings', {github_token: $('ghToken').value || undefined, git_name: $('gitName').value, git_email: $('gitEmail').value});
+  $('ghToken').value = ''; showCfg(c); toast('Saved (token is kept in server memory only)'); refreshGit(); }, e.target);
+$('commitBtn').onclick = e => guard(async () => { const r = await post(`/api/workspaces/${ws}/git/commit`, {message: $('commitMsg').value}); $('commitMsg').value = ''; toast('Committed ' + r.commit); refreshGit(); }, e.target);
+$('pushBtn').onclick = e => guard(async () => { const r = await post(`/api/workspaces/${ws}/git/push`); toast(r.result || 'Pushed', 6000); refreshGit(); }, e.target);
+$('pullBtn').onclick = e => guard(async () => { const r = await post(`/api/workspaces/${ws}/git/pull`); toast(r.result || 'Pulled', 6000); refreshTree(); refreshGit(); }, e.target);
+$('reviewBtn').onclick = e => guard(async () => { toast('Asking expert…', 60000); const r = await post(`/api/workspaces/${ws}/review`); $('toast').style.display='none'; $('vPath').textContent = 'Expert review'; $('vBody').textContent = r.review; $('viewer').style.display = 'flex'; }, e.target);
+$('branchBtn').onclick = e => guard(async () => { const n = $('branchIn').value.trim(); if (!n) return;
+  const have = ($('brName').textContent || '').includes(n);
+  try { await post(`/api/workspaces/${ws}/git/branch`, {name: n, create: false}); } catch (_) { await post(`/api/workspaces/${ws}/git/branch`, {name: n, create: true}); }
+  $('branchIn').value = ''; refreshTree(); refreshGit(); }, e.target);
+$('remoteBtn').onclick = e => guard(async () => { await post(`/api/workspaces/${ws}/git/remote`, {url: $('remoteIn').value}); $('remoteIn').value = ''; refreshGit(); }, e.target);
+
+function showCfg(c) { const ps = $('profile'); if (!ps.options.length) { c.profiles.forEach(p => ps.add(new Option(p + (p === c.expert ? ' (paid expert)' : ''), p))); ps.value = c.default_profile; }
+  $('cfgInfo').textContent = `GitHub token: ${c.has_github_token ? 'set' : 'not set'} · expert: ${c.expert || 'none'}`;
+  if (c.git_name) $('gitName').value = c.git_name; if (c.git_email) $('gitEmail').value = c.git_email; }
+(async () => { const c = await api('/api/config'); showCfg(c); await loadWorkspaces(); })().catch(e => toast(e.message));
+</script>
+</body>
+</html>
