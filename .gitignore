@@ -1,6 +1,9 @@
 __pycache__/
+*.pyc
 *.egg-info/
 .venv/
 .env
 build/
 dist/
+debug_payload.json
+brainstorm_outputs/
